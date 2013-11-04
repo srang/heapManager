@@ -1,0 +1,66 @@
+/**********************************************
+ * Please DO NOT MODIFY the format of this file
+ **********************************************/
+
+/*************************
+ * Team Info & Time spent
+ *************************/
+
+	Name1: Sam Rang
+	NetId1: spr20
+	Time spent: 11 hours
+
+/******************
+ * Files to submit
+ ******************/
+
+	dmm.c 	// Header file is not necessary
+	README	// This file filled with the lab implementation details
+
+/************************
+ * Implementation details
+ *************************/
+
+I implemented the heap manager as a unified doubly linked list of allocated and 
+unallocated blocks of memory. Both type of blocks use the metadata_t* header to 
+track which blocks come before and after and to keep track of how big the block
+is. Originally I added a boolean that was used to keep track of whether or not a 
+block was allocated. The problem I ran into with that implementation is that the 
+header is always memory aligned and each of the three values already in the struct
+are each 64 bits (or 32 bits on a 32 bit machine) so any additional variables in 
+the struct will always take up an additional aligned address in memory where I 
+only need one bit. To solve this I used the assumption that our memory block sizes
+will always be double-word aligned and this would make the bottom three bits of 
+'size' equal to zero, and then treated the bottom most bit as a boolean 
+representing whether or not a block is allocated.
+
+One downside to the unified doubly linked list option is that now to find a
+free block you have to iterate through more blocks in freelist (which is now
+sort of a poor name since it contains free and not-free blcoks). However, it
+remains a O(n) algorithm and because the allocated blocks are already sorted in
+our list, freeing and coalescing becomes an O(1) problem. Each block only has to
+move from the pointer returned to the header of the memory block, then cast this 
+pointer as a metadata_t*, change the size to indicate it's free, and then coalesce.
+Coalescing is also really nice in this implementation because if you try to coalesce
+on every free call then you know that after every free call your entire list is
+as coalesced as possible, and all that is required for a coalesce is having the 
+freed block check to see if the previous and next blocks are free.
+
+If I had to do this project differently I would have made two doubly linked lists 
+so malloc would take less time than the above implementation because it wouldn't
+have to check if a block is allocated or free and it wouldn't have to check as 
+many blocks. The downside to the is coalescing would be much more complicated and
+would be an O(n) algorithm. I looked into the actual 'malloc' command to see how it
+does it and I saw that it uses bins based on the size of the blocks and I got 
+pretty overwhelmed. I think my implementation isn't necessarily the fastest, but
+the code is very readible, there aren't a lot of if/else trees and its fairly 
+simple and elegant.  
+
+/************************
+ * Feedback on the lab
+ ************************/
+
+/************************
+ * References
+ ************************/
+Modern Operating Systems 3Ed.
